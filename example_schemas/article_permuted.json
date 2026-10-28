@@ -1,0 +1,10 @@
+{
+  "name": "article permuted",
+  "type": "choice",
+  "questions": [
+    "This article belongs in sport",
+    "This article belongs in entertainment",
+    "This article belongs in politics",
+    "This article belongs in business"
+  ]
+}
