@@ -8,7 +8,7 @@ CAPRICORN aims to develop a lightweight, general-purpose probabilistic inference
 
 Through independently encoded, reusable representations and late-stage attention, the architecture seeks to minimise redundant computation while supporting dynamically specified classification tasks without task-specific fine-tuning.
 
-The project targets a memory footprint of approximately 2 GB RAM, enabling efficient, accessible deployment on consumer hardware and resource-constrained systems.
+The model uses the first 20 layers of Qwen3-1.7B-Base, followed by an output head consisting of two bidirectional transformer blocks and a scalar prediction layer. In my local inference tests with the default context-length setting, it used just over 3 GB of VRAM.
 
 **Warning:** I developed this project over the course of a couple of days as a
 personal project. I have tried to make the implementation and results as
