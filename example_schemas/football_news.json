@@ -1,0 +1,9 @@
+{
+  "name": "football news",
+  "type": "bernoulli",
+  "questions": [
+    "This article is about football",
+    "This article has team news announcements",
+    "This article has news about Man Utd"
+  ]
+}

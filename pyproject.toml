@@ -1,0 +1,35 @@
+[project]
+name = "capricorn"
+version = "0.1.0"
+description = "Cached Attention for Probabilistic Reasoning, Inference, Classification, and Open-set Recognition Networks"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "accelerate>=1.15.0",
+    "datasets>=4.0.0",
+    "flask>=3.1.0",
+    "huggingface-hub>=2.2.0",
+    "pydantic>=2.0",
+    "safetensors>=0.8.0",
+    "torch>=2.11.0",
+    "transformers>=5.20.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"

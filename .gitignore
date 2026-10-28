@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+
+# Tool caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local configuration
+.env
+.env.*
+!.env.example
+
+# Downloaded models and datasets
+/models/
+/data/
+
+# Local model checkpoints and exploratory runs
+*.pt
+/checkpoints/_dynamic_question_check/
+/checkpoints/_fixed_question_check/
