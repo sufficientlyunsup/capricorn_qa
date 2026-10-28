@@ -5,8 +5,18 @@ from pathlib import Path
 
 HUGGINGFACE_REPO_ID = "Qwen/Qwen3-1.7B-Base"
 MODEL_REVISION = "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+CAPRICORN_REPO_ID = "sufficientlyunsup/capricorn-qa"
+QWEN_TOKENIZER_FILES = (
+    "config.json",
+    "generation_config.json",
+    "merges.txt",
+    "tokenizer.json",
+    "tokenizer_config.json",
+    "vocab.json",
+)
 # Relative to the working directory; run scripts from the project root.
 MODEL_DIR = Path("models/qwen3-1.7b")
+CHECKPOINT_PATH = Path("checkpoints/qa_train_stage_2/capricorn-qa.pt")
 DEFAULT_QWEN3_LAYERS = 20
 
 # Dataset repositories are downloaded as their native Hugging Face files.

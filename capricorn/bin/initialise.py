@@ -1,18 +1,73 @@
-"""Download CAPRICORN's base model and optional training data.
+"""Download a CAPRICORN checkpoint or the assets needed for training.
 
-Only the base model is downloaded by default. Training data is unnecessary
-unless you want to refit the model; request it with --data.
+The trained CAPRICORN checkpoint is downloaded by default. The Qwen backbone
+and training data are only downloaded when --train is requested.
 """
 
 import argparse
 import logging
 from pathlib import Path
 
-from huggingface_hub import snapshot_download
+from huggingface_hub import hf_hub_download, snapshot_download
 
-from capricorn.bin.common import DATASETS, HUGGINGFACE_REPO_ID, MODEL_DIR, MODEL_REVISION
+from capricorn.bin.common import (
+    CAPRICORN_REPO_ID,
+    CHECKPOINT_PATH,
+    DATASETS,
+    HUGGINGFACE_REPO_ID,
+    MODEL_DIR,
+    MODEL_REVISION,
+    QWEN_TOKENIZER_FILES,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def download_checkpoint(force: bool = False) -> Path:
+    """Download the published CAPRICORN checkpoint."""
+    destination = CHECKPOINT_PATH.resolve()
+    if destination.exists() and not destination.is_file():
+        raise NotADirectoryError(f"Checkpoint destination is not a file: {destination}")
+    if destination.exists() and not force:
+        logger.info("Checkpoint already exists; skipping: %s", destination)
+        return destination
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    logger.info("Downloading %s/capricorn-qa.pt -> %s", CAPRICORN_REPO_ID, destination)
+    downloaded = hf_hub_download(
+        repo_id=CAPRICORN_REPO_ID,
+        repo_type="model",
+        filename="capricorn-qa.pt",
+        local_dir=destination.parent,
+        force_download=force,
+    )
+    downloaded_path = Path(downloaded).resolve()
+    if downloaded_path != destination:
+        downloaded_path.replace(destination)
+    logger.info("Ready: %s", destination)
+    return destination
+
+
+def download_tokenizer(force: bool = False) -> Path:
+    """Download only the Qwen config and tokenizer needed for inference."""
+    destination = MODEL_DIR.resolve()
+    destination.mkdir(parents=True, exist_ok=True)
+    if not force and all(
+        (destination / filename).is_file() for filename in QWEN_TOKENIZER_FILES
+    ):
+        logger.info("Qwen config/tokenizer already exists; skipping: %s", destination)
+        return destination
+    logger.info("Downloading Qwen config/tokenizer -> %s", destination)
+    snapshot_download(
+        repo_id=HUGGINGFACE_REPO_ID,
+        repo_type="model",
+        revision=MODEL_REVISION,
+        local_dir=destination,
+        allow_patterns=QWEN_TOKENIZER_FILES,
+        force_download=force,
+    )
+    return destination
+
 
 def download_model(force: bool = False) -> Path:
     """Download the pinned base model and return its local directory.
@@ -70,11 +125,11 @@ def download_data(force: bool = False) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__,
-        epilog="Training data is only needed when refitting CAPRICORN.",
+        epilog="Use --train only when refitting CAPRICORN.",
     )
     parser.add_argument(
-        "--data", action="store_true",
-        help="Also download the configured NLI and QA datasets.",
+        "--train", action="store_true",
+        help="Download the Qwen backbone and configured NLI/QA datasets.",
     )
     parser.add_argument(
         "--force", action="store_true",
@@ -83,9 +138,12 @@ def main() -> None:
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
-    download_model(force=args.force)
-    if args.data:
+    if args.train:
+        download_model(force=args.force)
         download_data(force=args.force)
+    else:
+        download_checkpoint(force=args.force)
+        download_tokenizer(force=args.force)
 
 
 if __name__ == "__main__":

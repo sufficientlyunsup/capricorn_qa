@@ -11,7 +11,7 @@ import torch
 from capricorn.bin.common import DEFAULT_QWEN3_LAYERS, MODEL_DIR
 
 from .components import CapricornModel, FusionLayer
-from .construct import make_output_layer, make_qwen3_base
+from .construct import make_output_layer, make_qwen3_base, make_qwen3_base_from_config
 from .schema import OutputSchema
 
 
@@ -40,13 +40,21 @@ class CapricornFactory:
         self.intermediate_size = intermediate_size
         self.model: CapricornModel | None = None
 
-    def _build(self) -> CapricornModel:
-        backbone = make_qwen3_base(
-            nlayers=self.nlayers,
-            model_path=self.model_path,
-            dtype=self.dtype,
-            device_map=str(self.device) if self.device is not None else self.device_map,
-        )
+    def _build(self, *, backbone_from_config: bool = False) -> CapricornModel:
+        if backbone_from_config:
+            backbone = make_qwen3_base_from_config(
+                nlayers=self.nlayers,
+                model_path=self.model_path,
+                dtype=self.dtype,
+                device=self.device,
+            )
+        else:
+            backbone = make_qwen3_base(
+                nlayers=self.nlayers,
+                model_path=self.model_path,
+                dtype=self.dtype,
+                device_map=str(self.device) if self.device is not None else self.device_map,
+            )
         config = backbone.config
         fusion = FusionLayer(
             hidden_size=config.hidden_size,
@@ -76,7 +84,6 @@ class CapricornFactory:
 
     def build_from_saved_file(self, path: str | Path) -> CapricornModel:
         """Build a model and load a plain or wrapped state dictionary."""
-        model = self._build()
         checkpoint = torch.load(path, map_location="cpu", weights_only=True)
         if isinstance(checkpoint, Mapping):
             if "state_dict" in checkpoint:
@@ -85,5 +92,12 @@ class CapricornFactory:
                 checkpoint = checkpoint["model_state_dict"]
         if not isinstance(checkpoint, Mapping):
             raise TypeError("saved file must contain a model state-dict mapping")
+        model_path = Path(self.model_path)
+        has_local_weights = any(
+            candidate.is_file()
+            for pattern in ("*.safetensors", "*.bin", "*.pt")
+            for candidate in model_path.glob(pattern)
+        )
+        model = self._build(backbone_from_config=not has_local_weights)
         model.load_state_dict(checkpoint)
         return model

@@ -21,7 +21,7 @@ uv run main.py
 
 Add dependencies with `uv add <package>` and development dependencies with `uv add --dev <package>`.
 
-## Download models and data
+## Download the trained model
 
 From the project root, run:
 
@@ -29,7 +29,12 @@ From the project root, run:
 uv run python -m capricorn.bin.initialise
 ```
 
-This downloads Qwen/Qwen3-1.7B-Base into `models/qwen3-1.7b` using the shared settings in `capricorn/bin/common.py`. If the directory already exists, the download is skipped without checking its contents or accessing the network. Models and data are excluded from Git.
+This downloads the published CAPRICORN checkpoint from
+`sufficientlyunsup/capricorn-qa` into
+`checkpoints/qa_train_stage_2/capricorn-qa.pt`, together with the small Qwen
+configuration and tokenizer files needed to run inference. The full Qwen
+backbone weights are already included in the CAPRICORN checkpoint. If the
+files already exist, the downloads are skipped without accessing the network.
 
 To download again, or recover from an incomplete download, run:
 
@@ -37,18 +42,23 @@ To download again, or recover from an incomplete download, run:
 uv run python -m capricorn.bin.initialise --force
 ```
 
-Setup downloads only the base model by default. Training data is unnecessary unless you want to refit the model. Pass `--data` to also download the configured NLI and QA datasets into `data/` as native Hugging Face repository files. MNLI and MultiRC are restricted to their relevant subtrees of larger repositories.
+## Download training assets
+
+To download the Qwen backbone and all configured NLI and QA datasets, run:
+
+```bash
+uv run python -m capricorn.bin.initialise --train
+```
+
+This downloads Qwen/Qwen3-1.7B-Base into `models/qwen3-1.7b` and the datasets
+into `data/` as native Hugging Face repository files. MNLI and MultiRC are
+restricted to their relevant subtrees of larger repositories. Add `--force` to
+redownload these assets.
 
 View all options with:
 
 ```bash
 uv run python -m capricorn.bin.initialise -h
-```
-
-To download the model and all configured training datasets:
-
-```bash
-uv run python -m capricorn.bin.initialise --data
 ```
 
 ## Inspect the base model
@@ -180,4 +190,3 @@ example schemas. These are qualitative checks, not benchmark measurements.
 | Manchester United confirmed that their captain will miss Sunday's Premier League match because of a hamstring injury. The manager said the team is assessing several players before the fixture. | 0.0505 | 0.6084 | 0.0783 | 0.2628 |
 | The Chancellor announced a new tax package in Parliament, promising changes to income tax thresholds and public spending. Opposition leaders criticised the proposal during a heated debate. | 0.9125 | 0.0020 | 0.0722 | 0.0133 |
 | The company reported record quarterly revenue after strong sales in its cloud computing division. Executives said they expect continued growth despite rising production costs. | 0.0077 | 0.0059 | 0.9640 | 0.0224 |
-

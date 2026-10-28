@@ -8,7 +8,7 @@ from typing import Any
 
 import torch
 from torch import Tensor, nn
-from transformers import AutoModelForCausalLM
+from transformers import AutoConfig, AutoModel, AutoModelForCausalLM
 
 from capricorn.bin.common import DEFAULT_QWEN3_LAYERS, MODEL_DIR
 from .schema import OutputSchema
@@ -55,6 +55,38 @@ def make_qwen3_base(
     backbone.layers = nn.ModuleList(list(layers)[:nlayers])
     if hasattr(backbone, "config"):
         backbone.config.num_hidden_layers = nlayers
+    backbone.requires_grad_(False)
+    backbone.eval()
+    return backbone
+
+
+def make_qwen3_base_from_config(
+    nlayers: int = DEFAULT_QWEN3_LAYERS,
+    *,
+    model_path: str | Path = MODEL_DIR,
+    dtype: torch.dtype = torch.float16,
+    device: str | torch.device | None = None,
+) -> nn.Module:
+    """Construct the retained Qwen backbone from config without base weights.
+
+    The caller is expected to load the backbone weights from a CAPRICORN state
+    dictionary afterward. This supports inference from a self-contained
+    CAPRICORN checkpoint while keeping the Qwen base weights out of the
+    default download path.
+    """
+    if not isinstance(nlayers, int) or isinstance(nlayers, bool) or nlayers < 1:
+        raise ValueError("nlayers must be a positive integer")
+
+    config = AutoConfig.from_pretrained(model_path, local_files_only=True)
+    if nlayers > config.num_hidden_layers:
+        raise ValueError(
+            f"nlayers={nlayers} exceeds the configured {config.num_hidden_layers} layers"
+        )
+    config.num_hidden_layers = nlayers
+    backbone = AutoModel.from_config(config)
+    backbone = backbone.to(dtype=dtype)
+    if device is not None:
+        backbone = backbone.to(device)
     backbone.requires_grad_(False)
     backbone.eval()
     return backbone
