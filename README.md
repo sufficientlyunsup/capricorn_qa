@@ -2,6 +2,8 @@
 
 Configurable Architecture for Probabilistic Inference and Contextual Reasoning over Natural language
 
+Read the accompanying blog post for the motivation, architecture, and experimental results: [I built a small but flexible text classifier for modest hardware](https://sufficientlyunsupervised.hashnode.dev/i-built-a-small-but-flexible-text-classifier-for-modest-hardware).
+
 ## Project overview
 
 CAPRICORN aims to develop a lightweight, general-purpose probabilistic inference architecture capable of multiclass classification and repeated Bernoulli inference over textually defined contexts and candidate outcomes.
